@@ -37,14 +37,20 @@ def PrintAirport(airport):
 #per acabar de pulir Pas 3
 #direcció es refereix a N,S,E o W
 def convert_coord(coord):
-   direcció=coord[0]
-   graus=int(coord[1:3])
-   minuts=int(coord[3:5])
-   segons=int(coord[5:7])
-   decimal=graus+minuts/60+segons/3600
-   if direcció in ['S','W']:
-       decimal=-decimal
-   return decimal
+    direcció = coord[0]
+    resta = coord[1:]  # tot sense la lletra inicial
+    if len(resta) == 6:   # latitud: GGMMSS (2 dígits de graus)
+        graus = int(resta[0:2])
+        minuts = int(resta[2:4])
+        segons = int(resta[4:6])
+    else:                 # longitud: GGGMMSS (3 dígits de graus)
+        graus = int(resta[0:3])
+        minuts = int(resta[3:5])
+        segons = int(resta[5:7])
+    decimal = graus + minuts/60 + segons/3600
+    if direcció in ['S', 'W']:
+        decimal = -decimal
+    return decimal
 #Amb el if traiem les direccions negatives
 
 

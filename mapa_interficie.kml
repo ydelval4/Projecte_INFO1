@@ -12,13 +12,6 @@
     </IconStyle>
   </Style>
   <Placemark>
-    <name>BIKF</name>
-    <styleUrl>#schengen_style</styleUrl>
-    <Point>
-      <coordinates>-2.4005555555555556,63.985,0</coordinates>
-    </Point>
-  </Placemark>
-  <Placemark>
     <name>CYUL</name>
     <styleUrl>#no_schengen_style</styleUrl>
     <Point>
