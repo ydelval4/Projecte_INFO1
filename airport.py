@@ -138,11 +138,11 @@ def PlotAirports(airports):
 
     # Creamos el gráfico de barras apiladas
     fig, ax = plt.subplots()
-    ax.bar(['Aeropuertos'], [schengen_count], label='Schengen', color='blue')
-    ax.bar(['Aeropuertos'], [non_schengen_count], bottom=[schengen_count], label='No Schengen', color='red')
+    ax.bar(['Aeroports'], [schengen_count], label='Schengen', color='blue')
+    ax.bar(['Aeroports'], [non_schengen_count], bottom=[schengen_count], label='No Schengen', color='red')
 
-    ax.set_ylabel('Cantidad')
-    ax.set_title('Aeropuertos Schengen vs No Schengen')
+    ax.set_ylabel('Quantitat')
+    ax.set_title('Aeroports Schengen vs No Schengen')
     ax.legend()
     plt.show()
 
