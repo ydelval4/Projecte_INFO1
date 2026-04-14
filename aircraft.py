@@ -1,3 +1,7 @@
+import matplotlib.pyplot as plt
+from airport import *
+
+
 class Aircraft:
     def __init__(self, id='-', airline='-', origin='-', time='00:00'):
         self.id = id  # Matrícula de l'avió (string)
@@ -103,13 +107,10 @@ def PlotFlightsType(aircrafts):
     no_schengen = 00
 
     for ac in aircrafts:
-        if ac.origin in airports_data:
-            country = airports_data[ac.origin][0]
-
-            if country in schengen_countries:
-                schengen += 1
-            else:
-                no_schengen += 1
+        if IsSchengenAirport(ac.origin):
+            schengen += 1
+        else:
+            no_schengen += 1
 #Es recorre la llista de vols, s'obté el país de l'aeroport d'origen i es classifica com a Schengen o no Schengen, mentre s'acumula el número de vols.
     plt.figure()
     plt.bar(["Flights"], [schengen], label="Schengen")
@@ -122,7 +123,12 @@ def PlotFlightsType(aircrafts):
 def MapFlights(aircrafts):
     if len(aircrafts) == 0:
         print("Error: no hi ha dades")
-        return
+        return -1
+
+    airports_list = LoadAirports("Airports.txt")
+    airports_dict = {}
+    for a in airports_list:
+        airports_dict[a.code] = a
 
     LEBL_LAT = 41.2974
     LEBL_LON = 2.0833
@@ -133,18 +139,16 @@ def MapFlights(aircrafts):
 """
 
     for ac in aircrafts:
-        if ac.origin not in airports_data:
-            continue
+        if ac.origin in airports_dict:
+            origen = airports_dict[ac.origin]
 
-        country, lat, lon = airports_data[ac.origin]
+            # Schengen = verd, no Schengen = vermell
+            if IsSchengenAirport(ac.origin):
+                color = "ff00ff00"  # verd
+            else:
+                color = "ff0000ff"  # vermell
 
-        if country in schengen_countries:
-            color = "ff00ff00"  # verde
-        else:
-            color = "ff0000ff"  # rojo
-
-        kml += f""" #Es un texto multilínea con variables dentro, PREGUNTAR PROFE
-<Placemark>
+            kml += f"""<Placemark>
     <Style>
         <LineStyle>
             <color>{color}</color>
@@ -153,7 +157,7 @@ def MapFlights(aircrafts):
     </Style>
     <LineString>
         <coordinates>
-            {lon},{lat},0
+            {origen.lon},{origen.lat},0
             {LEBL_LON},{LEBL_LAT},0
         </coordinates>
     </LineString>
@@ -187,21 +191,21 @@ def HaversineDistance(lat1, lon1, lat2, lon2):
 def LongDistanceArrivals(aircrafts):
     llista_llunyans = []
 
-    # Coordenades de l'aeroport de Barcelona
     LEBL_LAT = 41.2974
     LEBL_LON = 2.0833
 
+    # Carreguem els aeroports per obtenir les coordenades
+    airports_list = LoadAirports("Airports.txt")
+    airports_dict = {}
+    for a in airports_list:
+        airports_dict[a.code] = a
+
     for ac in aircrafts:
         # Comprovem si tenim les dades de l'aeroport d'origen
-        if ac.origin in airports_data:
-
-            pais, lat_origen, lon_origen = airports_data[ac.origin]
-
-            # Calculem la distància fins a Barcelona
-            distancia = HaversineDistance(lat_origen, lon_origen, LEBL_LAT, LEBL_LON)
-
-            # Si és superior a 2000 km, l'afegim a la llista
+        if ac.origin in airports_dict:
+            origen = airports_dict[ac.origin]
+            distancia = HaversineDistance(origen.lat, origen.lon, LEBL_LAT, LEBL_LON)
             if distancia > 2000:
                 llista_llunyans.append(ac)
 
-    return llista_llunyans
+        return llista_llunyans

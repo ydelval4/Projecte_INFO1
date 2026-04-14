@@ -34,7 +34,6 @@ def PrintAirport(airport):
 
 
 
-#per acabar de pulir Pas 3
 #direcció es refereix a N,S,E o W
 def convert_coord(coord):
     direcció = coord[0]
