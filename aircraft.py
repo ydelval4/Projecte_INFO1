@@ -132,12 +132,12 @@ def MapFlights(aircrafts):
 
     LEBL_LAT = 41.2974
     LEBL_LON = 2.0833
-#Tots els vols al mteix aeroport, el de Barcelona.
+#Tots els vols al mateix aeroport, el de Barcelona.
     kml = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
 """
-
+#Escriure que llegeixi aircraft i airport
     for ac in aircrafts:
         if ac.origin in airports_dict:
             origen = airports_dict[ac.origin]
