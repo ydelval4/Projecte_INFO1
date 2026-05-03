@@ -1,10 +1,17 @@
 import tkinter as tk
 from tkinter import messagebox, simpledialog, filedialog
+
+from LEBL import LoadAirportStructure, AssignGate, GateOccupancy
 # Importem TOT el que vam fer al pas anterior
 from airport import *
+from aircraft import *
+from LEBL import *
 
-# Variable global per guardar la llista d'aeroports que es mostren a la pantalla
+
+# Variables globals
 llista_aeroports = []
+llista_vols = []
+bcn = None
 
 
 def carregar_fitxer():
@@ -88,50 +95,6 @@ def mostrar_mapa():
     else:
         messagebox.showerror("Error", "No s'ha pogut crear el mapa.")
 
-
-# --- DISSENY DE LA INTERFÍCIE (FINESTRA I BOTONS) ---
-finestra = tk.Tk()
-finestra.title("Gestió d'Aeroports - V1")
-finestra.geometry("650x400")
-
-# Panell per als botons (a l'esquerra)
-frame_botons = tk.Frame(finestra)
-frame_botons.pack(side=tk.LEFT, padx=15, pady=15, fill=tk.Y)
-
-tk.Button(frame_botons, text="1. Carregar Aeroports", command=carregar_fitxer, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="2. Aplicar Schengen", command=aplicar_schengen, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="3. Afegir Aeroport", command=afegir_aeroport, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="4. Esborrar Aeroport", command=esborrar_aeroport, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="5. Guardar Schengen", command=guardar_schengen, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="6. Mostrar Gràfic", command=mostrar_grafic, width=20, bg="#cce5ff").pack(pady=5)
-tk.Button(frame_botons, text="7. Crear Mapa (KML)", command=mostrar_mapa, width=20, bg="#d4edda").pack(pady=5)
-
-# Panell per a la llista (a la dreta)
-frame_llista = tk.Frame(finestra)
-frame_llista.pack(side=tk.RIGHT, padx=15, pady=15, expand=True, fill=tk.BOTH)
-
-tk.Label(frame_llista, text="Dades dels aeroports:", font=("Arial", 10, "bold")).pack(anchor="w")
-scrollbar = tk.Scrollbar(frame_llista)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-
-# Aquí és on es mostren els aeroports com a text
-listbox = tk.Listbox(frame_llista, yscrollcommand=scrollbar.set, width=50, font=("Consolas", 10))
-listbox.pack(expand=True, fill=tk.BOTH)
-scrollbar.config(command=listbox.yview)
-
-# Això fa que la finestra es quedi oberta esperant que facis clic
-finestra.mainloop()
-import tkinter as tk
-from tkinter import messagebox, simpledialog, filedialog
-# Importem els dos fitxers de lògica
-from airport import *
-from aircraft import *
-
-# Variables globals
-llista_aeroports = []
-llista_vols = []
-
-
 # --- FUNCIONS EXISTENTS (V1) ---
 def carregar_fitxer_aeroports():
     global llista_aeroports
@@ -202,39 +165,124 @@ def guardar_vols_llunyans():
     if res == 0:
         messagebox.showinfo("Èxit", f"S'han guardat {len(vols_llunyans)} vols llunyans.")
 
+# --- NOVES FUNCIONS (V3) ---
+def carregar_aeroport():
+    global bcn
 
-# --- DISSENY DE LA INTERFÍCIE V2 ---
+    result = LoadAirportStructure("LEBL.txt")
+
+    if result == -1 or result is None:
+        print("Error carregant aeroport")
+        bcn = None
+        return
+
+    bcn = result
+
+    print("Aeroport carregat correctament")
+
+def assignar_gate_ui():
+    global bcn
+
+    if bcn is None or not hasattr(bcn, "terminals"):
+        print("Primer carrega l'aeroport")
+        return
+
+    aircraft = Aircraft("TEST123", "AEE", True)
+
+    try:
+        res = AssignGate(bcn, aircraft)
+    except Exception as e:
+        print("Error assignant gate:", e)
+        return
+
+    if res == -1:
+        print("No s'ha pogut assignar gate")
+    else:
+        print("Gate assignat correctament")
+
+
+def mostrar_gates():
+    global bcn
+
+    if bcn is None or not hasattr(bcn, "terminals"):
+        print("No hi ha aeroport carregat")
+        return
+
+    try:
+        dades = GateOccupancy(bcn)
+    except Exception as e:
+        print("Error llegint gates:", e)
+        return
+
+    listbox_vols.delete(0, tk.END)
+
+    for g in dades:
+        estat = "Ocupat" if g["occupied"] else "Lliure"
+        aircraft = g["aircraft_id"] if g["aircraft_id"] != "" else "-"
+        text = f"{g['name']} - {estat} - {aircraft}"
+        listbox_vols.insert(tk.END, text)
+
+# --- DISSENY DE LA INTERFÍCIE (ÚNICA FINESTRA) ---
 finestra = tk.Tk()
-finestra.title("Gestió Aeroportuària - V2 (BCN)")
-finestra.geometry("900x550")
+finestra.title("Gestió completa aeroports - V1 + V2 + V3")
+finestra.geometry("900x600")
 
-# Panell de botons
+
+# V1
+
+frame_llista = tk.Frame(finestra)
+frame_llista.pack(side=tk.RIGHT, padx=15, pady=15, expand=True, fill=tk.BOTH)
+
 frame_botons = tk.Frame(finestra)
-frame_botons.pack(side=tk.LEFT, padx=10, pady=10, fill=tk.Y)
+frame_botons.pack(side=tk.LEFT, padx=15, pady=15, fill=tk.Y)
 
-tk.Label(frame_botons, text="AEROPORTS", font=("Arial", 10, "bold")).pack()
-tk.Button(frame_botons, text="Gràfic Schengen", command=lambda: PlotAirports(llista_aeroports), width=22).pack(pady=2)
+
+tk.Button(frame_botons, text="1. Carregar Aeroports", command=carregar_fitxer, width=20, bg="#e0e0e0").pack(pady=5)
+tk.Button(frame_botons, text="2. Aplicar Schengen", command=aplicar_schengen, width=20, bg="#e0e0e0").pack(pady=5)
+tk.Button(frame_botons, text="3. Afegir Aeroport", command=afegir_aeroport, width=20, bg="#e0e0e0").pack(pady=5)
+tk.Button(frame_botons, text="4. Esborrar Aeroport", command=esborrar_aeroport, width=20, bg="#e0e0e0").pack(pady=5)
+tk.Button(frame_botons, text="5. Guardar Schengen", command=guardar_schengen, width=20, bg="#e0e0e0").pack(pady=5)
+tk.Button(frame_botons, text="6. Mostrar Gràfic", command=mostrar_grafic, width=20, bg="#cce5ff").pack(pady=5)
+tk.Button(frame_botons, text="7. Crear Mapa (KML)", command=mostrar_mapa, width=20, bg="#d4edda").pack(pady=5)
+
+
+tk.Label(frame_llista, text="Dades dels aeroports:", font=("Arial", 10, "bold")).pack(anchor="w")
+
+scrollbar = tk.Scrollbar(frame_llista)
+scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+listbox = tk.Listbox(frame_llista, yscrollcommand=scrollbar.set, width=50, font=("Consolas", 10))
+listbox.pack(expand=True, fill=tk.BOTH)
+scrollbar.config(command=listbox.yview)
+
+# V2
 
 tk.Label(frame_botons, text="\nVOLS (ARRIVALS)", font=("Arial", 10, "bold")).pack()
-tk.Button(frame_botons, text="Carregar Arrivals.txt", command=carregar_fitxer_vols, width=22, bg="#cce5ff").pack(pady=2)
-tk.Button(frame_botons, text="Gràfic Aerolínies", command=mostrar_grafic_vols, width=22).pack(pady=2)
-tk.Button(frame_botons, text="Gràfic Tipus Vol", command=mostrar_grafic_tipus_vols, width=22).pack(pady=2)
 
-tk.Label(frame_botons, text="\nACCIONS V2", font=("Arial", 10, "bold")).pack()
-tk.Button(frame_botons, text="Crear Mapa Trajectòries", command=generar_mapa_trajectories, width=22, bg="#d4edda").pack(
-    pady=2)
-tk.Button(frame_botons, text="Guardar Vols > 2000km", command=guardar_vols_llunyans, width=22).pack(pady=2)
+tk.Button(frame_botons, text="Carregar Arrivals.txt", command=carregar_fitxer_vols, width=20, bg="#cce5ff").pack(pady=2)
+tk.Button(frame_botons, text="Gràfic Aerolínies", command=mostrar_grafic_vols, width=20).pack(pady=2)
+tk.Button(frame_botons, text="Gràfic Tipus Vol", command=mostrar_grafic_tipus_vols, width=20).pack(pady=2)
+tk.Button(frame_botons, text="Crear Mapa Trajectòries", command=generar_mapa_trajectories, width=20, bg="#d4edda").pack(pady=2)
+tk.Button(frame_botons, text="Vols > 2000km", command=guardar_vols_llunyans, width=20).pack(pady=2)
 
-# Panell de dades (Aeroports a dalt, Vols a baix)
-frame_dades = tk.Frame(finestra)
-frame_dades.pack(side=tk.RIGHT, padx=10, pady=10, expand=True, fill=tk.BOTH)
 
-tk.Label(frame_dades, text="Llista d'Aeroports:").pack(anchor="w")
-listbox_ap = tk.Listbox(frame_dades, height=10, font=("Consolas", 9))
+tk.Label(frame_llista, text="\nLlista d'Aeroports:").pack(anchor="w")
+listbox_ap = tk.Listbox(frame_llista, height=10, font=("Consolas", 9))
 listbox_ap.pack(fill=tk.X, pady=5)
 
-tk.Label(frame_dades, text="Llista de Vols (Arribades a BCN):").pack(anchor="w")
-listbox_vols = tk.Listbox(frame_dades, height=15, font=("Consolas", 9), bg="#f0f8ff")
+tk.Label(frame_llista, text="Llista de Vols:").pack(anchor="w")
+listbox_vols = tk.Listbox(frame_llista, height=15, font=("Consolas", 9), bg="#f0f8ff")
 listbox_vols.pack(fill=tk.BOTH, expand=True)
 
+
+# V3
+
+tk.Label(frame_botons, text="\n Gates BCN", font=("Arial", 10, "bold")).pack()
+
+tk.Button(frame_botons, text="Carregar LEBL", command=carregar_aeroport, width=20).pack(pady=2)
+tk.Button(frame_botons, text="Assignar Gate", command=assignar_gate_ui, width=20).pack(pady=2)
+tk.Button(frame_botons, text="Mostrar Gates", command=mostrar_gates, width=20).pack(pady=2)
+
+tk.Button(frame_botons, text="Plot Gates", command=lambda: print(GateOccupancy(bcn)), width=20).pack(pady=2)
+# SOLO UNA MAINLOOP
 finestra.mainloop()

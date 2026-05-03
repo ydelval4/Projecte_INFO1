@@ -81,3 +81,64 @@ def LoadAirportStructure(filename):
             SetGates(area, init_gate, end_gate, prefix)
             current_terminal.areas.append(area)
     return bcn
+
+
+def GateOccupancy(bcn):
+    #Dada una instancia de BarcelonaAP, devuelve una lista de todas las puertas con su nombre, estado de ocupación e identificador del avión si lo hay.
+    occupancy_list = []
+
+    for terminal in bcn.terminals:
+        for area in terminal.areas:
+            for gate in area.gates:
+                # Guardamos la información de cada puerta en una tupla o lista
+                gate_info = {
+                    "name": gate.name,
+                    "occupied": gate.occupied,
+                    "aircraft_id": gate.aircraft_id}
+                occupancy_list.append(gate_info)
+
+    return occupancy_list
+
+
+def IsAirlineInTerminal(terminal, name):
+    #Comprueba si el nombre (o código ICAO) de una aerolínea está en la lista de la terminal. Devuelve True si está, False en caso contrario o si el nombre es vacío.
+    # Si el nombre es una cadena vacía, devolvemos False según el requisito [cite: 592]
+    if not name or name.strip() == "":
+        return False
+
+    # Comprobamos si la aerolínea está en la lista de la terminal
+    if name in terminal.airlines:
+        return True
+
+    return False
+
+def SearchTerminal(bcn, name):
+    if not name or name.strip() == "":
+        return ""
+
+    for terminal in bcn.terminals:
+        if IsAirlineInTerminal(terminal, name):
+            return terminal.name
+
+    return ""
+
+def AssignGate(bcn, aircraft):
+    nomterminal = SearchTerminal(bcn, aircraft.airline)
+
+    if nomterminal == "":
+        return -1  # aerolínea no encontrada
+
+    for terminal in bcn.terminals:
+        if terminal.name == nomterminal:
+
+            for area in terminal.areas:
+                # comprobar tipo Schengen
+                if area.schengen == aircraft.schengen:
+
+                    for gate in area.gates:
+                        if not gate.occupied:
+                            gate.occupied = True
+                            gate.aircraft_id = aircraft.id
+                            return 0
+
+    return -1  # no portes lliures
