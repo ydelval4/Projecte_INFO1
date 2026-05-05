@@ -5,8 +5,6 @@ from LEBL import LoadAirportStructure, AssignGate, GateOccupancy
 # Importem TOT el que vam fer al pas anterior
 from airport import *
 from aircraft import *
-from LEBL import *
-
 
 # Variables globals
 llista_aeroports = []
@@ -169,15 +167,19 @@ def guardar_vols_llunyans():
 def carregar_aeroport():
     global bcn
 
-    result = LoadAirportStructure("LEBL.txt")
+    try:
+        result = LoadAirportStructure("Terminals.txt")
+    except Exception as e:
+        print("ERROR REAL:", e)
+        bcn = None
+        return
 
     if result == -1 or result is None:
-        print("Error carregant aeroport")
+        print("Error carregant aeroport (fitxer incorrecte)")
         bcn = None
         return
 
     bcn = result
-
     print("Aeroport carregat correctament")
 
 def assignar_gate_ui():
@@ -259,7 +261,7 @@ scrollbar.config(command=listbox.yview)
 
 tk.Label(frame_botons, text="\nVOLS (ARRIVALS)", font=("Arial", 10, "bold")).pack()
 
-tk.Button(frame_botons, text="Carregar Arrivals.txt", command=carregar_fitxer_vols, width=20, bg="#cce5ff").pack(pady=2)
+tk.Button(frame_botons, text="Carregar Arrivals", command=carregar_fitxer_vols, width=20, bg="#cce5ff").pack(pady=2)
 tk.Button(frame_botons, text="Gràfic Aerolínies", command=mostrar_grafic_vols, width=20).pack(pady=2)
 tk.Button(frame_botons, text="Gràfic Tipus Vol", command=mostrar_grafic_tipus_vols, width=20).pack(pady=2)
 tk.Button(frame_botons, text="Crear Mapa Trajectòries", command=generar_mapa_trajectories, width=20, bg="#d4edda").pack(pady=2)

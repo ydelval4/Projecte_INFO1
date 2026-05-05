@@ -188,7 +188,7 @@ def HaversineDistance(lat1, lon1, lat2, lon2):
     return m
 
 
-def LongDistanceArrivals(aircrafts):
+def LongDistanceArrivals(aircrafts): #posar això: def LongDistanceArrivals(aircrafts, airports)
     llista_llunyans = []
 
     LEBL_LAT = 41.2974
@@ -208,4 +208,4 @@ def LongDistanceArrivals(aircrafts):
             if distancia > 2000:
                 llista_llunyans.append(ac)
 
-        return llista_llunyans
+    return llista_llunyans
