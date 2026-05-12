@@ -183,25 +183,29 @@ def carregar_aeroport():
     print("Aeroport carregat correctament")
 
 def assignar_gate_ui():
-    global bcn
+    global bcn, llista_vols
 
     if bcn is None or not hasattr(bcn, "terminals"):
         print("Primer carrega l'aeroport")
         return
 
-    aircraft = Aircraft("TEST123", "AEE", True)
-
-    try:
-        res = AssignGate(bcn, aircraft)
-    except Exception as e:
-        print("Error assignant gate:", e)
+    #Assignem gates a tots els vols carregats
+    if not llista_vols:
+        print("Primer carrega els vols (Arrivals)")
         return
 
-    if res == -1:
-        print("No s'ha pogut assignar gate")
-    else:
-        print("Gate assignat correctament")
+    assignats = 0
+    errors = 0
+    for v in llista_vols:
+        res = AssignGate(bcn, v)
+        if res == -1:
+            errors += 1
+        else:
+            assignats += 1
 
+    print(f"Gates assignats: {assignats} | No assignats: {errors}")
+    messagebox.showinfo("Assignació completada",
+                        f"Assignats: {assignats}\nNo assignats: {errors}")
 
 def mostrar_gates():
     global bcn
