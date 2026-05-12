@@ -1,3 +1,7 @@
+from airport import *
+
+
+
 class BarcelonaAP:
     def __init__(self, code):
         self.code = code
@@ -92,7 +96,6 @@ def LoadAirportStructure(filename):
             else:
                 schengen = False
 
-            # FORMATO FIJO → más simple
             # Area A Schengen Gates 1 - 11
             init_gate = int(parts[4])
             end_gate = int(parts[6])
@@ -208,7 +211,7 @@ def AssignGate(bcn, aircraft):
 
             for area in terminal.areas:
                 # comprobar tipo Schengen
-                if area.schengen == aircraft.schengen:
+                if area.schengen == IsSchengenAirport(aircraft.origin):
 
                     for gate in area.gates:
                         if not gate.occupied:
