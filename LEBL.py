@@ -1,7 +1,5 @@
 from airport import *
 
-
-
 class BarcelonaAP:
     def __init__(self, code):
         self.code = code
