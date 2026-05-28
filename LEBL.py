@@ -25,6 +25,8 @@ class Gate:
         self.name = name
         self.occupied = False
         self.aircraft_id = ""
+        self.time = ""
+        self.departuretime = ""
 
 
 def SetGates(area, init_gate, end_gate, prefix):
@@ -158,6 +160,27 @@ def AssignGate(bcn, aircraft):
                         if not gate.occupied:
                             gate.occupied = True
                             gate.aircraft_id = aircraft.id
+                            #GAURDAR EL TEMPS D'ARRIBADA:
+                            gate.time = aircraft.time
+                            gate.departuretime = aircraft.departuretime
                             return 0
 
     return -1  # no portes lliures
+
+def FreeGateOnDeparture(bcn, aircraft):
+
+    for terminal in bcn.terminals:
+        for area in terminal.areas:
+            for gate in area.gates:
+
+                if gate.aircraft_id == aircraft.id:
+
+                    # liberar el gate cuando el avión sale
+                    gate.occupied = False
+                    gate.aircraft_id = ""
+                    gate.time = ""
+                    gate.departuretime = ""
+
+                    return 0
+
+    return -1

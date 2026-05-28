@@ -3,11 +3,14 @@ from airport import *
 
 
 class Aircraft:
-    def __init__(self, id='-', airline='-', origin='-', time='00:00'):
+    def __init__(self, id='-', airline='-', origin='-', time='00:00', destination='-',
+                 departuretime='00:00'):
         self.id = id  # Matrícula de l'avió (string)
         self.airline = airline  # Codi ICAO de la companyia (3 caràcters)
         self.origin = origin  # Codi ICAO de l'aeroport d'origen (4 caràcters)
         self.time = time  # Hora d'aterratge en format hh:mm (string)
+        self.destination = destination #Quin serà el destí final
+        self.departuretime = departuretime #Hora d'arrivada
 
 def is_valid_time(time_str):
     """Comprova que un string té format hh:mm vàlid."""
@@ -20,6 +23,9 @@ def is_valid_time(time_str):
     except:
         return False
 
+def TimeToMinutes(time_str):
+    h, m = map(int, time_str.split(":"))
+    return h * 60 + m
 
 def LoadArrivals(filename):
     aircrafts = []
@@ -52,6 +58,97 @@ def LoadArrivals(filename):
 
     return aircrafts
 
+
+def LoadDepartures(filename):
+
+    aircrafts = []
+
+    try:
+        f = open(filename, 'r')
+    except:
+        print(f"Error: no s'ha trobat el fitxer '{filename}'")
+        return aircrafts, -1
+
+    lines = f.readlines()
+    f.close()
+
+    for line in lines[1:]:
+        line = line.strip()
+
+        if not line:
+            continue
+
+        parts = line.split()
+
+        if len(parts) < 4:
+            continue
+
+        aircraft_id = parts[0]
+        destination = parts[1]
+        departuretime = parts[2]
+        airline = parts[3]
+
+        if not is_valid_time(departuretime):
+            continue
+
+        ac = Aircraft()
+
+        ac.id = aircraft_id
+        ac.destination = destination
+        ac.departuretime = departuretime
+        ac.airline = airline
+
+        aircrafts.append(ac)
+
+    return aircrafts, 0
+
+def MergeMovements(arrivals, departures):
+    if len(arrivals) == 0 or len(departures) == 0:
+        return [], -1
+
+    result = []
+    used_departures = []
+
+    for arr in arrivals:
+
+        merged = arr  # empezamos con el avión de llegada
+
+        for dep in departures:
+
+            if dep in used_departures:
+                continue
+
+            if arr.id == dep.id:
+
+                if TimeToMinutes(arr.time) < TimeToMinutes(dep.departuretime):
+                    merged.destination = dep.destination
+                    merged.departuretime = dep.departuretime
+
+                    used_departures.append(dep)
+                    break
+
+        result.append(merged)
+
+    # añadir vuelos que solo tienen salida (aviones nocturnos)
+    for dep in departures:
+
+        if dep not in used_departures:
+            result.append(dep)
+
+    return result, 0
+
+def NightAircraft(aircrafts):
+
+    if len(aircrafts) == 0:
+        return [], -1
+
+    result = []
+
+    for ac in aircrafts:
+        if ac.origin == '-' or ac.origin == "":
+            result.append(ac)
+
+    return result, 0
 
 def SaveFlights(aircrafts, filename):
 

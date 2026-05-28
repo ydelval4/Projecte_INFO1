@@ -184,3 +184,4 @@ def MapAirports(airports, filename="mapa_aeropuertos.kml"):
     except Exception as e:
         print(f"Error generando el mapa KML: {e}")
         return -1
+
