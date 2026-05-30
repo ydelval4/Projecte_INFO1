@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 from airport import *
 
-
 class Aircraft:
     def __init__(self, id='-', airline='-', origin='-', time='00:00', destination='-',
                  departuretime='00:00'):

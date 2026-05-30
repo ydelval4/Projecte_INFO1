@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog, filedialog
+from tkinter import messagebox, simpledialog, filedialog, ttk
 
 from LEBL import LoadAirportStructure, AssignGate, GateOccupancy
 # Importem TOT el que vam fer al pas anterior
@@ -10,6 +10,11 @@ from aircraft import *
 llista_aeroports = []
 llista_vols = []
 bcn = None
+estat_var = None
+
+def actualitzar_estat(text):
+    if estat_var:
+        estat_var.set(text)
 
 
 def carregar_fitxer():
@@ -23,11 +28,16 @@ def carregar_fitxer():
 
 
 def actualitzar_llista():
-    # Esborra la llista visual i la torna a omplir
-    listbox.delete(0, tk.END)
+
+    listbox_ap.delete(0, tk.END)
+
     for a in llista_aeroports:
+
         schengen_txt = "Sí" if a.schengen else "No"
-        listbox.insert(tk.END, f"{a.code} | Lat: {a.lat:.2f} | Lon: {a.lon:.2f} | Schengen: {schengen_txt}")
+
+        listbox_ap.insert(
+            tk.END,
+            f"{a.code} | Lat:{a.lat:.2f} | Lon:{a.lon:.2f} | Schengen:{schengen_txt}")
 
 
 def aplicar_schengen():
@@ -38,22 +48,69 @@ def aplicar_schengen():
 
 
 def afegir_aeroport():
-    code = simpledialog.askstring("Codi", "Introdueix el codi ICAO (ex: LEBL):")
-    if not code: return
-    lat = simpledialog.askfloat("Latitud", "Introdueix la latitud (en graus decimals, ex: 41.29):")
-    if lat is None: return
-    lon = simpledialog.askfloat("Longitud", "Introdueix la longitud (en graus decimals, ex: 2.08):")
-    if lon is None: return
 
-    nou = Airport(code.upper(), lat, lon)
-    SetSchengen(nou)  # Comprovem si és Schengen abans d'afegir-lo
-    res = AddAirport(llista_aeroports, nou)
+    finestra_add = tk.Toplevel(finestra)
+    finestra_add.title("Afegir Aeroport")
+    finestra_add.geometry("350x250")
+    finestra_add.resizable(False, False)
 
-    if res == 0:
-        actualitzar_llista()
-        messagebox.showinfo("Èxit", f"Aeroport {code.upper()} afegit correctament.")
-    else:
-        messagebox.showerror("Error", "Aquest aeroport ja existeix a la llista.")
+    tk.Label(
+        finestra_add,
+        text="Nou Aeroport",
+        font=("Segoe UI", 14, "bold")
+    ).pack(pady=10)
+
+    tk.Label(finestra_add, text="Codi ICAO").pack()
+    entry_code = tk.Entry(finestra_add)
+    entry_code.pack(fill="x", padx=20)
+
+    tk.Label(finestra_add, text="Latitud").pack(pady=(10,0))
+    entry_lat = tk.Entry(finestra_add)
+    entry_lat.pack(fill="x", padx=20)
+
+    tk.Label(finestra_add, text="Longitud").pack(pady=(10,0))
+    entry_lon = tk.Entry(finestra_add)
+    entry_lon.pack(fill="x", padx=20)
+
+    def guardar():
+
+        try:
+            code = entry_code.get().upper()
+            lat = float(entry_lat.get())
+            lon = float(entry_lon.get())
+
+            nou = Airport(code, lat, lon)
+
+            SetSchengen(nou)
+
+            res = AddAirport(llista_aeroports, nou)
+
+            if res == 0:
+
+                actualitzar_llista()
+                actualitzar_llista_aeroports()
+
+                actualitzar_estat(
+                    f"Aeroport {code} afegit correctament")
+                messagebox.showinfo(
+                    "Èxit",
+                    f"Aeroport {code} afegit correctament")
+                finestra_add.destroy()
+            else:
+                messagebox.showerror(
+                    "Error",
+                    "Aquest aeroport ja existeix")
+        except:
+            messagebox.showerror(
+                "Error",
+                "Valors incorrectes")
+    tk.Button(
+        finestra_add,
+        text="Guardar Aeroport",
+        bg="#2E7D32",
+        fg="white",
+        command=guardar
+    ).pack(pady=20)
 
 
 def esborrar_aeroport():
@@ -125,7 +182,15 @@ def carregar_fitxer_vols():
 def actualitzar_llista_vols():
     listbox_vols.delete(0, tk.END)
     for v in llista_vols:
-        listbox_vols.insert(tk.END, f"{v.id} | {v.origin} -> BCN | {v.time} | {v.airline}")
+
+        text = (
+            f"✈ {v.id} | "
+            f"{v.origin} → BCN | "
+            f"{v.time} | "
+            f"{v.airline}"
+        )
+
+        listbox_vols.insert(tk.END, text)
 
 
 def mostrar_grafic_vols():
@@ -166,21 +231,28 @@ def guardar_vols_llunyans():
 # --- NOVES FUNCIONS (V3) ---
 def carregar_aeroport():
     global bcn
-
     try:
         result = LoadAirportStructure("Terminals.txt")
+        if result == -1 or result is None:
+
+            messagebox.showerror(
+                "Error",
+                "No s'ha pogut carregar l'aeroport")
+            return
+
+        bcn = result
+        actualitzar_estat(
+            "Estructura LEBL carregada")
+
+        messagebox.showinfo(
+            "Èxit",
+            "Aeroport carregat correctament")
+
     except Exception as e:
-        print("ERROR REAL:", e)
-        bcn = None
-        return
 
-    if result == -1 or result is None:
-        print("Error carregant aeroport (fitxer incorrecte)")
-        bcn = None
-        return
-
-    bcn = result
-    print("Aeroport carregat correctament")
+        messagebox.showerror(
+            "Error",
+            str(e))
 
 def assignar_gate_ui():
     global bcn, llista_vols
@@ -208,87 +280,237 @@ def assignar_gate_ui():
                         f"Assignats: {assignats}\nNo assignats: {errors}")
 
 def mostrar_gates():
+
     global bcn
 
-    if bcn is None or not hasattr(bcn, "terminals"):
-        print("No hi ha aeroport carregat")
+    if bcn is None:
+
+        messagebox.showwarning(
+            "Atenció",
+            "Primer carrega LEBL")
+
         return
 
-    try:
-        dades = GateOccupancy(bcn)
-    except Exception as e:
-        print("Error llegint gates:", e)
-        return
+    dades = GateOccupancy(bcn)
 
     listbox_vols.delete(0, tk.END)
 
     for g in dades:
+
         estat = "Ocupat" if g["occupied"] else "Lliure"
-        aircraft = g["aircraft_id"] if g["aircraft_id"] != "" else "-"
-        text = f"{g['name']} - {estat} - {aircraft}"
+
+        aircraft = (
+            g["aircraft_id"]
+            if g["aircraft_id"] != ""
+            else "-")
+
+        text = (
+            f"{g['name']} | "
+            f"{estat} | "
+            f"{aircraft}")
+
         listbox_vols.insert(tk.END, text)
 
-# --- DISSENY DE LA INTERFÍCIE (ÚNICA FINESTRA) ---
+    actualitzar_estat(
+        "Gates mostrats")
+
+# =========================
+# VENTANA PRINCIPAL
+# =========================
+
+COLOR_FONDO = "#F5F7FA"
+COLOR_PANEL = "#FFFFFF"
+COLOR_PRINCIPAL = "#1F4E79"
+COLOR_TEXTO = "#2C3E50"
+COLOR_LISTA = "#FAFBFC"
+
 finestra = tk.Tk()
-finestra.title("Gestió completa aeroports - V1 + V2 + V3")
-finestra.geometry("900x600")
+finestra.title("Airport Management System")
+finestra.geometry("1450x850")
+finestra.configure(bg=COLOR_FONDO)
 
+# =========================
+# ESTILO BOTONES
+# =========================
 
-# V1
+BTN_FONT = ("Segoe UI", 10, "bold")
 
-frame_llista = tk.Frame(finestra)
-frame_llista.pack(side=tk.RIGHT, padx=15, pady=15, expand=True, fill=tk.BOTH)
+def crear_boto(parent, text, command):
+    return tk.Button(
+        parent,
+        text=text,
+        command=command,
+        width=28,
+        height=1,
+        bg=COLOR_PRINCIPAL,
+        fg="white",
+        activebackground="#163A5C",
+        activeforeground="white",
+        relief="flat",
+        cursor="hand2",
+        font=BTN_FONT
+    )
 
-frame_botons = tk.Frame(finestra)
-frame_botons.pack(side=tk.LEFT, padx=15, pady=15, fill=tk.Y)
+import tkinter as tk
 
+# =========================
+# VENTANA PRINCIPAL
+# =========================
 
-tk.Button(frame_botons, text="1. Carregar Aeroports", command=carregar_fitxer, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="2. Aplicar Schengen", command=aplicar_schengen, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="3. Afegir Aeroport", command=afegir_aeroport, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="4. Esborrar Aeroport", command=esborrar_aeroport, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="5. Guardar Schengen", command=guardar_schengen, width=20, bg="#e0e0e0").pack(pady=5)
-tk.Button(frame_botons, text="6. Mostrar Gràfic", command=mostrar_grafic, width=20, bg="#cce5ff").pack(pady=5)
-tk.Button(frame_botons, text="7. Crear Mapa (KML)", command=mostrar_mapa, width=20, bg="#d4edda").pack(pady=5)
+COLOR_FONDO = "#F5F7FA"
+COLOR_PANEL = "#FFFFFF"
+COLOR_PRINCIPAL = "#1F4E79"
+COLOR_TEXTO = "#2C3E50"
+COLOR_LISTA = "#FAFBFC"
 
+finestra = tk.Tk()
+finestra.title("Airport Management System")
+finestra.geometry("1450x850")
+finestra.configure(bg=COLOR_FONDO)
 
-tk.Label(frame_llista, text="Dades dels aeroports:", font=("Arial", 10, "bold")).pack(anchor="w")
+# =========================
+# BOTÓN UNIFICADO
+# =========================
 
-scrollbar = tk.Scrollbar(frame_llista)
-scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+BTN_FONT = ("Segoe UI", 10, "bold")
 
-listbox = tk.Listbox(frame_llista, yscrollcommand=scrollbar.set, width=50, font=("Consolas", 10))
-listbox.pack(expand=True, fill=tk.BOTH)
-scrollbar.config(command=listbox.yview)
+def crear_boto(parent, text, command):
+    return tk.Button(
+        parent,
+        text=text,
+        command=command,
+        width=28,
+        bg=COLOR_PRINCIPAL,
+        fg="white",
+        activebackground="#163A5C",
+        activeforeground="white",
+        relief="flat",
+        cursor="hand2",
+        font=BTN_FONT
+    )
 
-# V2
+# =========================
+# TITULO
+# =========================
 
-tk.Label(frame_botons, text="\nVOLS (ARRIVALS)", font=("Arial", 10, "bold")).pack()
+tk.Label(
+    finestra,
+    text="AIRPORT MANAGEMENT SYSTEM",
+    font=("Segoe UI", 22, "bold"),
+    bg=COLOR_FONDO,
+    fg=COLOR_PRINCIPAL
+).pack(pady=15)
 
-tk.Button(frame_botons, text="Carregar Arrivals", command=carregar_fitxer_vols, width=20, bg="#cce5ff").pack(pady=2)
-tk.Button(frame_botons, text="Gràfic Aerolínies", command=mostrar_grafic_vols, width=20).pack(pady=2)
-tk.Button(frame_botons, text="Gràfic Tipus Vol", command=mostrar_grafic_tipus_vols, width=20).pack(pady=2)
-tk.Button(frame_botons, text="Crear Mapa Trajectòries", command=generar_mapa_trajectories, width=20, bg="#d4edda").pack(pady=2)
-tk.Button(frame_botons, text="Vols > 2000km", command=guardar_vols_llunyans, width=20).pack(pady=2)
+# =========================
+# CONTENEDOR PRINCIPAL
+# =========================
 
+contenidor = tk.Frame(finestra, bg=COLOR_FONDO)
+contenidor.pack(fill="both", expand=True, padx=15, pady=10)
 
-tk.Label(frame_llista, text="\nLlista d'Aeroports:").pack(anchor="w")
-listbox_ap = tk.Listbox(frame_llista, height=10, font=("Consolas", 9))
-listbox_ap.pack(fill=tk.X, pady=5)
+# =========================
+# PANEL BOTONES (SCROLLABLE)
+# =========================
 
-tk.Label(frame_llista, text="Llista de Vols:").pack(anchor="w")
-listbox_vols = tk.Listbox(frame_llista, height=15, font=("Consolas", 9), bg="#f0f8ff")
-listbox_vols.pack(fill=tk.BOTH, expand=True)
+frame_botons_container = tk.Frame(contenidor, bg=COLOR_PANEL)
+frame_botons_container.pack(side="left", fill="y", padx=(0,10))
 
+canvas_botons = tk.Canvas(frame_botons_container, bg=COLOR_PANEL, highlightthickness=0, width=320)
+scroll_botons = tk.Scrollbar(frame_botons_container, orient="vertical", command=canvas_botons.yview)
 
-# V3
+frame_botons = tk.Frame(canvas_botons, bg=COLOR_PANEL)
 
-tk.Label(frame_botons, text="\n Gates BCN", font=("Arial", 10, "bold")).pack()
+frame_botons.bind(
+    "<Configure>",
+    lambda e: canvas_botons.configure(scrollregion=canvas_botons.bbox("all"))
+)
 
-tk.Button(frame_botons, text="Carregar LEBL", command=carregar_aeroport, width=20).pack(pady=2)
-tk.Button(frame_botons, text="Assignar Gate", command=assignar_gate_ui, width=20).pack(pady=2)
-tk.Button(frame_botons, text="Mostrar Gates", command=mostrar_gates, width=20).pack(pady=2)
+canvas_botons.create_window((0, 0), window=frame_botons, anchor="nw")
+canvas_botons.configure(yscrollcommand=scroll_botons.set)
 
-tk.Button(frame_botons, text="Plot Gates", command=lambda: print(GateOccupancy(bcn)), width=20).pack(pady=2)
-# SOLO UNA MAINLOOP
+canvas_botons.pack(side="left", fill="both", expand=True)
+scroll_botons.pack(side="right", fill="y")
+
+# =========================
+# PANEL AEROPUERTOS
+# =========================
+
+frame_aeroports = tk.Frame(contenidor, bg=COLOR_PANEL, bd=1, relief="solid")
+frame_aeroports.pack(side="left", fill="both", expand=True, padx=(0,10))
+
+# =========================
+# PANEL VUELOS
+# =========================
+
+frame_vols = tk.Frame(contenidor, bg=COLOR_PANEL, bd=1, relief="solid")
+frame_vols.pack(side="left", fill="both", expand=True)
+
+# =========================
+# AEROPORTS BOTONES
+# =========================
+
+tk.Label(frame_botons, text="AEROPORTS", font=("Segoe UI",12,"bold"), bg=COLOR_PANEL).pack(pady=10)
+
+crear_boto(frame_botons,"Carregar Aeroports",carregar_fitxer).pack(pady=3)
+crear_boto(frame_botons,"Aplicar Schengen",aplicar_schengen).pack(pady=3)
+crear_boto(frame_botons,"Afegir Aeroport",afegir_aeroport).pack(pady=3)
+crear_boto(frame_botons,"Esborrar Aeroport",esborrar_aeroport).pack(pady=3)
+crear_boto(frame_botons,"Guardar Schengen",guardar_schengen).pack(pady=3)
+crear_boto(frame_botons,"Mostrar Gràfic",mostrar_grafic).pack(pady=3)
+crear_boto(frame_botons,"Crear Mapa KML",mostrar_mapa).pack(pady=3)
+
+# =========================
+# VOLS BOTONES
+# =========================
+
+tk.Label(frame_botons, text="VOLS", font=("Segoe UI",12,"bold"), bg=COLOR_PANEL).pack(pady=(20,10))
+
+crear_boto(frame_botons,"Carregar Arrivals",carregar_fitxer_vols).pack(pady=3)
+crear_boto(frame_botons,"Gràfic Aerolínies",mostrar_grafic_vols).pack(pady=3)
+crear_boto(frame_botons,"Gràfic Tipus Vol",mostrar_grafic_tipus_vols).pack(pady=3)
+crear_boto(frame_botons,"Mapa Trajectòries",generar_mapa_trajectories).pack(pady=3)
+crear_boto(frame_botons,"Vols > 2000 km",guardar_vols_llunyans).pack(pady=3)
+
+# =========================
+# GATES BOTONES
+# =========================
+
+tk.Label(frame_botons, text="GATES BCN", font=("Segoe UI",12,"bold"), bg=COLOR_PANEL).pack(pady=(20,10))
+
+crear_boto(frame_botons,"Carregar LEBL",carregar_aeroport).pack(pady=3)
+crear_boto(frame_botons,"Assignar Gates",assignar_gate_ui).pack(pady=3)
+crear_boto(frame_botons,"Mostrar Gates",mostrar_gates).pack(pady=3)
+
+# =========================
+# AEROPORTS LISTA
+# =========================
+
+tk.Label(frame_aeroports, text="AEROPORTS", font=("Segoe UI",13,"bold"), bg=COLOR_PANEL).pack(pady=10)
+
+listbox_ap = tk.Listbox(frame_aeroports, font=("Consolas",10), bg=COLOR_LISTA, bd=0)
+listbox_ap.pack(fill="both", expand=True, padx=10, pady=10)
+
+# =========================
+# VOLS LISTA
+# =========================
+
+tk.Label(frame_vols, text="VOLS I GATES", font=("Segoe UI",13,"bold"), bg=COLOR_PANEL).pack(pady=10)
+
+listbox_vols = tk.Listbox(frame_vols, font=("Consolas",10), bg=COLOR_LISTA, bd=0)
+listbox_vols.pack(fill="both", expand=True, padx=10, pady=10)
+
+# =========================
+# ESTADO
+# =========================
+
+estat_var = tk.StringVar(value="Sistema preparat")
+
+tk.Label(
+    finestra,
+    textvariable=estat_var,
+    bg=COLOR_PANEL,
+    anchor="w",
+    padx=10
+).pack(side="bottom", fill="x")
+
 finestra.mainloop()
