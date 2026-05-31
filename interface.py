@@ -12,6 +12,10 @@ llista_vols = []
 bcn = None
 estat_var = None
 
+# NOVES VARIABLES GLOBALS (V4)
+llista_arrivals = []
+llista_departures = []
+
 def actualitzar_estat(text):
     if estat_var:
         estat_var.set(text)
@@ -148,10 +152,11 @@ def actualitzar_llista_aeroports():
 #NOVES FUNCIONS (V2)
 
 def carregar_fitxer_vols():
-    global llista_vols
+    global llista_vols, llista_arrivals
     filename = filedialog.askopenfilename(title="Selecciona Arrivals.txt", filetypes=[("Text files", "*.txt")])
     if filename:
         llista_vols = LoadArrivals(filename)
+        llista_arrivals = llista_vols # Guardem a arrivals per a la v4
         actualitzar_llista_vols()
         messagebox.showinfo("Èxit", f"S'han carregat {len(llista_vols)} vols.")
 
@@ -182,7 +187,7 @@ def generar_mapa_trajectories():
     if not llista_vols:
         messagebox.showwarning("Atenció", "No hi ha vols per mapejar.")
         return
-    # MapFlights ja crea el fitxer "flights.kml" segons el nostre codi
+    # MapFlights ya crea el fitxer "flights.kml" segons el nostre codi
     MapFlights(llista_vols)
     messagebox.showinfo("Èxit", "Fitxer 'flights.kml' creat amb les trajectòries.")
 
@@ -251,6 +256,34 @@ def mostrar_gates():
         listbox_vols.insert(tk.END, text)
     actualitzar_estat("Gates mostrats")
 
+
+def carregar_fitxer_sortides():
+    global llista_departures
+    filename = filedialog.askopenfilename(title="Selecciona Departures.txt", filetypes=[("Text files", "*.txt")])
+    if filename:
+        llista_departures = LoadDepartures(filename)
+        actualitzar_estat(f"Carregats {len(llista_departures)} vols de sortida")
+        messagebox.showinfo("Èxit", f"S'han carregat {len(llista_departures)} vols de sortida.")
+
+def fusionar_moviments_ui():
+    global llista_vols, llista_arrivals, llista_departures
+    if not llista_arrivals or not llista_departures:
+        messagebox.showwarning("Atenció", "Cal carregar tant Arrivals com Departures primer.")
+        return
+    llista_vols = MergeMovements(llista_arrivals, llista_departures)
+    actualitzar_llista_vols()
+    actualitzar_estat("Moviments fusionats")
+    messagebox.showinfo("Èxit", f"Moviments del dia fusionats. Total vols: {len(llista_vols)}")
+
+def mostrar_grafic_ocupacio_diaria():
+    from LEBL import PlotDayOccupancy
+    global bcn, llista_vols
+    if bcn is None or not llista_vols:
+        messagebox.showwarning("Atenció", "Cal carregar l'aeroport i haver fusionat els vols del dia.")
+        return
+    PlotDayOccupancy(bcn, llista_vols)
+
+
 #Finestra principal per la interfaz
 import tkinter as tk
 
@@ -307,9 +340,12 @@ crear_boto(frame_botons,"Guardar Schengen",guardar_schengen).pack(pady=3)
 crear_boto(frame_botons,"Mostrar Gràfic",mostrar_grafic).pack(pady=3)
 crear_boto(frame_botons,"Crear Mapa KML",mostrar_mapa).pack(pady=3)
 
+# SECCIÓ MODIFICADA PER RESPETAR EL TEU ESTIL I BOTONS DE LA V4 (AFEGIT)
 tk.Label(frame_botons, text="VOLS", font=("Segoe UI",12,"bold"), bg=COLOR_PANEL).pack(pady=(20,10))
 
 crear_boto(frame_botons,"Carregar Arrivals",carregar_fitxer_vols).pack(pady=3)
+crear_boto(frame_botons,"Carregar Departures",carregar_fitxer_sortides).pack(pady=3) # ◄ NOU
+crear_boto(frame_botons,"Fusionar Moviments",fusionar_moviments_ui).pack(pady=3)     # ◄ NOU
 crear_boto(frame_botons,"Gràfic Aerolínies",mostrar_grafic_vols).pack(pady=3)
 crear_boto(frame_botons,"Gràfic Tipus Vol",mostrar_grafic_tipus_vols).pack(pady=3)
 crear_boto(frame_botons,"Mapa Trajectòries",generar_mapa_trajectories).pack(pady=3)
@@ -320,6 +356,7 @@ tk.Label(frame_botons, text="GATES BCN", font=("Segoe UI",12,"bold"), bg=COLOR_P
 crear_boto(frame_botons,"Carregar LEBL",carregar_aeroport).pack(pady=3)
 crear_boto(frame_botons,"Assignar Gates",assignar_gate_ui).pack(pady=3)
 crear_boto(frame_botons,"Mostrar Gates",mostrar_gates).pack(pady=3)
+crear_boto(frame_botons,"Gràfic Ocupació 24h",mostrar_grafic_ocupacio_diaria).pack(pady=3) # ◄ NOU
 
 tk.Label(frame_aeroports, text="AEROPORTS", font=("Segoe UI",13,"bold"), bg=COLOR_PANEL).pack(pady=10)
 
