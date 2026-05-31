@@ -167,15 +167,12 @@ def AssignGate(bcn, aircraft):
 
     return -1  # no portes lliures
 
-def FreeGateOnDeparture(bcn, aircraft):
+def FreeGate(bcn, aircraft):
 
     for terminal in bcn.terminals:
         for area in terminal.areas:
             for gate in area.gates:
-
                 if gate.aircraft_id == aircraft.id:
-
-                    # liberar el gate cuando el avión sale
                     gate.occupied = False
                     gate.aircraft_id = ""
                     gate.time = ""
@@ -184,3 +181,96 @@ def FreeGateOnDeparture(bcn, aircraft):
                     return 0
 
     return -1
+
+def AssignNightGates(bcn, aircrafts):
+    if len(aircrafts) == 0:
+        return -1
+    for ac in aircrafts:
+        has_arrival = (ac.origin != '-' and ac.origin != '')
+        if not has_arrival:
+            AssignGate(bcn, ac)
+    return 0
+
+def _time_to_minutes(time_str):
+    try:
+        parts = time_str.split(':')
+        if len(parts) != 2:
+            return -1
+        h, m = int(parts[0]), int(parts[1])
+        if 0 <= h <= 23 and 0 <= m <= 59:
+            return h * 60 + m
+        return -1
+    except:
+        return -1
+
+
+def AssignGatesAtTime(bcn, aircrafts, time):
+    franja_inici = _time_to_minutes(time)
+    if franja_inici == -1:
+        return -1
+    franja_fi = franja_inici + 59  # tota la hora
+
+    for ac in aircrafts:
+        dep_time_str = getattr(ac, 'departuretime', getattr(ac, 'departure_time', ''))
+        dep_min = _time_to_minutes(dep_time_str)
+        if dep_min != -1 and dep_min < franja_inici:
+            FreeGate(bcn, ac.id)
+
+    no_assignats = 0
+    for ac in aircrafts:
+        arr_min = _time_to_minutes(ac.time)
+        if arr_min == -1:
+            continue
+        if franja_inici <= arr_min <= franja_fi:
+            resultat = AssignGate(bcn, ac)
+            if resultat == -1:
+                no_assignats += 1
+
+    return no_assignats
+
+
+def PlotDayOccupancy(bcn, aircrafts):
+    hores = list(range(24))
+    dades_terminals = {t.name: [] for t in bcn.terminals}
+    no_assignats_per_hora = []
+    for h in hores:
+        time_str = f"{h:02d}:00"
+        no_ass = AssignGatesAtTime(bcn, aircrafts, time_str)
+        if no_ass < 0:
+            no_ass = 0
+        no_assignats_per_hora.append(no_ass)
+
+        for terminal in bcn.terminals:
+            ocupades = 0
+            for area in terminal.areas:
+                for gate in area.gates:
+                    if gate.occupied:
+                        ocupades += 1
+            dades_terminals[terminal.name].append(ocupades)
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
+    fig.suptitle("Ocupació de portes al llarg del dia - LEBL", fontsize=14)
+
+    colors = ['#4C72B0', '#DD8452', '#55A868', '#C44E52', '#8172B2']
+    for i, (nom_terminal, ocupacions) in enumerate(dades_terminals.items()):
+        ax1.plot(hores, ocupacions, marker='o', label=nom_terminal,
+                 color=colors[i % len(colors)], linewidth=2)
+
+    ax1.set_title("Portes ocupades per terminal")
+    ax1.set_xlabel("Hora del dia")
+    ax1.set_ylabel("Portes ocupades")
+    ax1.set_xticks(hores)
+    ax1.set_xticklabels([f"{h:02d}:00" for h in hores], rotation=45, fontsize=7)
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+
+    ax2.bar(hores, no_assignats_per_hora, color='#C44E52', alpha=0.7)
+    ax2.set_title("Avions no assignats per falta de portes lliures")
+    ax2.set_xlabel("Hora del dia")
+    ax2.set_ylabel("Avions no assignats")
+    ax2.set_xticks(hores)
+    ax2.set_xticklabels([f"{h:02d}:00" for h in hores], rotation=45, fontsize=7)
+    ax2.grid(True, alpha=0.3, axis='y')
+
+    plt.tight_layout()
+    plt.show()
