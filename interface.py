@@ -301,13 +301,8 @@ def mostrar_grafic_ocupacio_diaria():
         return
     PlotDayOccupancy(bcn, llista_vols)
 
-import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
-import math
 
-# ══════════════════════════════════════════════════════════════════════════════
-# PALETA DE COLORES CLARA
-# ══════════════════════════════════════════════════════════════════════════════
 COLORS = {
     "bg_main":          "#f0f4f8",
     "bg_secondary":     "#ffffff",
@@ -325,9 +320,6 @@ COLORS = {
     "hover":            "#1e40af",
 }
 
-# ══════════════════════════════════════════════════════════════════════════════
-# FUNCIONES PLACEHOLDER
-# ══════════════════════════════════════════════════════════════════════════════
 def carregar_fitxer(): pass
 def aplicar_schengen(): pass
 def afegir_aeroport(): pass
@@ -348,9 +340,6 @@ def mostrar_gates(): pass
 def mostrar_grafic_ocupacio_diaria(): pass
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CLASE PRINCIPAL
-# ══════════════════════════════════════════════════════════════════════════════
 class AirportManagementApp:
     def __init__(self, root):
         self.root = root
@@ -370,14 +359,8 @@ class AirportManagementApp:
         style = ttk.Style()
         style.theme_use('clam')
 
-        style.configure(
-            "Custom.Vertical.TScrollbar",
-            background=COLORS["bg_card"],
-            troughcolor=COLORS["bg_main"],
-            arrowcolor=COLORS["accent_primary"]
-        )
+        style.configure("Custom.Vertical.TScrollbar",background=COLORS["bg_card"],troughcolor=COLORS["bg_main"],arrowcolor=COLORS["accent_primary"])
 
-    # ═════════════════ HEADER (SIN STATS) ═════════════════
     def create_header(self):
         header = tk.Frame(self.root, bg=COLORS["bg_main"], height=100)
         header.pack(fill="x", padx=20, pady=(15, 10))
@@ -386,34 +369,15 @@ class AirportManagementApp:
         left_container = tk.Frame(header, bg=COLORS["bg_main"])
         left_container.pack(side="left", fill="y")
 
-        tk.Label(
-            left_container,
-            text="AMS",
-            font=("Segoe UI", 26, "bold"),
-            bg=COLORS["bg_main"],
-            fg=COLORS["accent_primary"]
-        ).pack(side="left", padx=(0, 15))
+        tk.Label(left_container,text="AMS",font=("Segoe UI", 26, "bold"),bg=COLORS["bg_main"],fg=COLORS["accent_primary"]).pack(side="left", padx=(0, 15))
 
         title_frame = tk.Frame(left_container, bg=COLORS["bg_main"])
         title_frame.pack(side="left")
 
-        tk.Label(
-            title_frame,
-            text="AIRPORT MANAGEMENT",
-            font=("Segoe UI", 28, "bold"),
-            bg=COLORS["bg_main"],
-            fg=COLORS["text_primary"]
-        ).pack(anchor="w")
+        tk.Label(title_frame,text="AIRPORT MANAGEMENT",font=("Segoe UI", 28, "bold"),bg=COLORS["bg_main"],fg=COLORS["text_primary"]).pack(anchor="w")
 
-        tk.Label(
-            title_frame,
-            text="Sistema de Gestio Aeroportuaria",
-            font=("Segoe UI", 11),
-            bg=COLORS["bg_main"],
-            fg=COLORS["text_secondary"]
-        ).pack(anchor="w")
+        tk.Label(title_frame,text="Sistema de Gestio Aeroportuaria",font=("Segoe UI", 11),bg=COLORS["bg_main"],fg=COLORS["text_secondary"]).pack(anchor="w")
 
-    # ═════════════════ MAIN ═════════════════
     def create_main_content(self):
         main_container = tk.Frame(self.root, bg=COLORS["bg_main"])
         main_container.pack(fill="both", expand=True, padx=20, pady=10)
@@ -421,7 +385,6 @@ class AirportManagementApp:
         self.create_sidebar(main_container)
         self.create_content_area(main_container)
 
-    # ═════════════════ SIDEBAR (SCROLL FIX COMPLETO) ═════════════════
     def create_sidebar(self, parent):
         sidebar = tk.Frame(parent, bg=COLORS["bg_secondary"], width=320)
         sidebar.pack(side="left", fill="y", padx=(0, 15))
@@ -432,22 +395,18 @@ class AirportManagementApp:
 
         scroll_frame = tk.Frame(canvas, bg=COLORS["bg_secondary"])
 
-        # 🔥 FRAME DENTRO DEL CANVAS
         window = canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
 
-        # 🔥 ACTUALIZAR SCROLL REGION
         def update_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         scroll_frame.bind("<Configure>", update_scrollregion)
 
-        # 🔥 AJUSTAR ANCHO AL CANVAS
         def resize_frame(event):
             canvas.itemconfig(window, width=event.width)
 
         canvas.bind("<Configure>", resize_frame)
 
-        # 🔥 SCROLL CON RUEDA DEL RATÓN
         def on_mousewheel(event):
             canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
@@ -458,7 +417,6 @@ class AirportManagementApp:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # SECCIONES
         self.create_section(scroll_frame, "AEROPORTS", COLORS["accent_primary"], [
             ("Carregar Aeroports", carregar_fitxer, "Importar fitxer"),
             ("Aplicar Schengen", aplicar_schengen, "Filtrar Schengen"),
@@ -466,8 +424,7 @@ class AirportManagementApp:
             ("Esborrar Aeroport", esborrar_aeroport, "Eliminar aeroport"),
             ("Guardar Schengen", guardar_schengen, "Exportar"),
             ("Mostrar Grafic", mostrar_grafic, "Estadistiques"),
-            ("Crear Mapa", mostrar_mapa, "Mapa KML"),
-        ])
+            ("Crear Mapa", mostrar_mapa, "Mapa KML"),])
 
         self.create_section(scroll_frame, "VOLS", COLORS["success"], [
             ("Carregar Arrivals", carregar_fitxer_vols, "Importar arribades"),
@@ -476,41 +433,23 @@ class AirportManagementApp:
             ("Grafic Aerolinies", mostrar_grafic_vols, "Stats"),
             ("Grafic Tipus Vol", mostrar_grafic_tipus_vols, "Tipus"),
             ("Mapa Trajectories", generar_mapa_trajectories, "Rutes"),
-            ("Vols Llargs", guardar_vols_llunyans, "2000km+"),
-        ])
+            ("Vols Llargs", guardar_vols_llunyans, "2000km+"),])
 
         self.create_section(scroll_frame, "GATES BCN", COLORS["warning"], [
             ("Carregar LEBL", carregar_aeroport, "Barcelona"),
             ("Assignar Gates", assignar_gate_ui, "Auto gates"),
             ("Mostrar Gates", mostrar_gates, "Estat"),
-            ("Ocupacio 24h", mostrar_grafic_ocupacio_diaria, "Grafic"),
-        ])
+            ("Ocupacio 24h", mostrar_grafic_ocupacio_diaria, "Grafic"),])
 
-    # ═════════════════ SECTIONS ═════════════════
+
     def create_section(self, parent, title, color, buttons):
-        tk.Label(
-            parent,
-            text=title,
-            font=("Segoe UI", 13, "bold"),
-            bg=COLORS["bg_secondary"],
-            fg=color
-        ).pack(anchor="w", padx=15, pady=(15, 5))
+        tk.Label(parent,text=title,font=("Segoe UI", 13, "bold"),bg=COLORS["bg_secondary"],fg=color).pack(anchor="w", padx=15, pady=(15, 5))
 
         for text, cmd, tip in buttons:
             self.create_button(parent, text, cmd, tip, color)
 
     def create_button(self, parent, text, command, tooltip, color):
-        btn = tk.Label(
-            parent,
-            text=text,
-            font=("Segoe UI", 10),
-            bg=COLORS["bg_card"],
-            fg=COLORS["text_primary"],
-            padx=15,
-            pady=12,
-            anchor="w",
-            cursor="hand2"
-        )
+        btn = tk.Label(parent,text=text,font=("Segoe UI", 10),bg=COLORS["bg_card"],fg=COLORS["text_primary"],padx=15,pady=12,anchor="w",cursor="hand2")
         btn.pack(fill="x", padx=15, pady=3)
 
         def on_enter(e):
@@ -527,7 +466,6 @@ class AirportManagementApp:
         btn.bind("<Leave>", on_leave)
         btn.bind("<Button-1>", on_click)
 
-    # ═════════════════ CONTENT AREA ═════════════════
     def create_content_area(self, parent):
         content = tk.Frame(parent, bg=COLORS["bg_main"])
         content.pack(side="left", fill="both", expand=True)
@@ -539,13 +477,7 @@ class AirportManagementApp:
         frame = tk.Frame(parent, bg=COLORS["bg_secondary"])
         frame.pack(side="left", fill="both", expand=True, padx=10)
 
-        tk.Label(
-            frame,
-            text=title,
-            font=("Segoe UI", 14, "bold"),
-            bg=COLORS["bg_secondary"],
-            fg=color
-        ).pack(anchor="w", padx=10, pady=10)
+        tk.Label(frame,text=title,font=("Segoe UI", 14, "bold"),bg=COLORS["bg_secondary"],fg=color).pack(anchor="w", padx=10, pady=10)
 
         listbox = tk.Listbox(frame)
         listbox.pack(fill="both", expand=True, padx=10, pady=10)
@@ -553,24 +485,16 @@ class AirportManagementApp:
         listbox.insert(tk.END, "Carrega dades per començar...")
         return listbox
 
-    # ═════════════════ STATUS BAR ═════════════════
     def create_status_bar(self):
         bar = tk.Frame(self.root, bg=COLORS["bg_card"], height=40)
         bar.pack(fill="x", side="bottom")
         bar.pack_propagate(False)
 
-        tk.Label(
-            bar,
-            textvariable=self.estado_var,
-            bg=COLORS["bg_card"],
-            fg=COLORS["text_secondary"]
-        ).pack(side="left", padx=15)
+        tk.Label(bar,textvariable=self.estado_var,bg=COLORS["bg_card"],fg=COLORS["text_secondary"]).pack(side="left", padx=15)
 
     def update_status(self, msg):
         self.estado_var.set(msg)
 
-
-# ═════════════════ START ═════════════════
 if __name__ == "__main__":
     root = tk.Tk()
     app = AirportManagementApp(root)
