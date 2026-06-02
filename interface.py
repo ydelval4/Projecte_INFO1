@@ -102,6 +102,7 @@ def afegir_aeroport():
     tk.Button(finestra_add,text="Guardar Aeroport",bg="#2E7D32",fg="white",command=guardar).pack(pady=20)
 
 
+#Eminiar un aeroport posant el codi ICAO
 def esborrar_aeroport():
     code = simpledialog.askstring("Codi", "Introdueix el codi de l'aeroport a esborrar:")
     if not code: return
@@ -114,6 +115,7 @@ def esborrar_aeroport():
         messagebox.showwarning("Atenció", "No s'ha trobat cap aeroport amb aquest codi.")
 
 
+#Guarda en un fitxer només els aeroports que són Schengen
 def guardar_schengen():
     res = SaveSchengenAirports(llista_aeroports, "schengen_interficie.txt")
     if res == 0:
@@ -122,6 +124,7 @@ def guardar_schengen():
         messagebox.showwarning("Atenció", "La llista està buida o hi ha hagut un error.")
 
 
+#Mostra un gràfic amb les dades dels aeroports
 def mostrar_grafic():
     if not llista_aeroports:
         messagebox.showwarning("Atenció", "Primer has de carregar els aeroports.")
@@ -129,6 +132,7 @@ def mostrar_grafic():
     PlotAirports(llista_aeroports)
 
 
+#Crea un mapa KML per obrir-lo amb Google Earth
 def mostrar_mapa():
     if not llista_aeroports:
         messagebox.showwarning("Atenció", "Primer has de carregar els aeroports.")
@@ -139,7 +143,7 @@ def mostrar_mapa():
     else:
         messagebox.showerror("Error", "No s'ha pogut crear el mapa.")
 
-#FUNCIONS EXISTENTS (V1)
+#Carrega el fitxer Airports.txt
 def carregar_fitxer_aeroports():
     global llista_aeroports
     filename = filedialog.askopenfilename(title="Selecciona Airports.txt", filetypes=[("Text files", "*.txt")])
@@ -157,14 +161,14 @@ def actualitzar_llista_aeroports():
         listbox_ap.insert(tk.END, f"{a.code} | Lat: {a.lat:.2f} | Lon: {a.lon:.2f} | Sch: {schengen_txt}")
 
 
-#NOVES FUNCIONS (V2)
+#Noves funcions (V2)
 
 def carregar_fitxer_vols():
     global llista_vols, llista_arrivals
     filename = filedialog.askopenfilename(title="Selecciona Arrivals.txt", filetypes=[("Text files", "*.txt")])
     if filename:
         llista_vols = LoadArrivals(filename)
-        llista_arrivals = llista_vols # Guardem a arrivals per a la v4
+        llista_arrivals = llista_vols #Guardem a arrivals per a la v4
         actualitzar_llista_vols()
         messagebox.showinfo("Èxit", f"S'han carregat {len(llista_vols)} vols.")
 
@@ -180,7 +184,7 @@ def mostrar_grafic_vols():
     if not llista_vols:
         messagebox.showwarning("Atenció", "Primer carrega els vols.")
         return
-    # Pots triar quin gràfic mostrar o fer dos botons
+    #Pots triar quin gràfic mostrar o fer dos botons
     PlotAirlines(llista_vols)
 
 
@@ -195,7 +199,7 @@ def generar_mapa_trajectories():
     if not llista_vols:
         messagebox.showwarning("Atenció", "No hi ha vols per mapejar.")
         return
-    # MapFlights ya crea el fitxer "flights.kml" segons el nostre codi
+    #MapFlights ya crea el fitxer "flights.kml" segons el nostre codi
     MapFlights(llista_vols)
     messagebox.showinfo("Èxit", "Fitxer 'flights.kml' creat amb les trajectòries.")
 
@@ -211,7 +215,8 @@ def guardar_vols_llunyans():
     if res == 0:
         messagebox.showinfo("Èxit", f"S'han guardat {len(vols_llunyans)} vols llunyans.")
 
-# --- NOVES FUNCIONS (V3) ---
+
+#Noves funcions V3
 def carregar_aeroport():
     global bcn
     try:
@@ -219,6 +224,7 @@ def carregar_aeroport():
         if result == -1 or result is None:
             messagebox.showerror("Error","No s'ha pogut carregar l'aeroport")
             return
+        #Guardem l'estructura carregada
         bcn = result
         actualitzar_estat(
             "Estructura LEBL carregada")
@@ -226,6 +232,8 @@ def carregar_aeroport():
     except Exception as e:
         messagebox.showerror("Error",str(e))
 
+
+#Assigna portes als vols carregats
 def assignar_gate_ui():
     global bcn, llista_vols
     if bcn is None or not hasattr(bcn, "terminals"):
@@ -248,6 +256,8 @@ def assignar_gate_ui():
     print(f"Gates assignats: {assignats} | No assignats: {errors}")
     messagebox.showinfo("Assignació completada",f"Assignats: {assignats}\nNo assignats: {errors}")
 
+
+#Mostra totes les portes i el seu estat
 def mostrar_gates():
     global bcn
     if bcn is None:
