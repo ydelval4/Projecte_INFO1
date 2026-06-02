@@ -1,18 +1,21 @@
 import matplotlib.pyplot as plt
+#Importem totes les funcions i classes del fitxer airport.py
 from airport import *
 
+#Aquesta classe serveix per guardar la informació d'un avió
 class Aircraft:
     def __init__(self, id='-', airline='-', origin='-', time='00:00', destination='-',
                  departuretime='00:00'):
-        self.id = id  # Matrícula de l'avió (string)
-        self.airline = airline  # Codi ICAO de la companyia (3 caràcters)
-        self.origin = origin  # Codi ICAO de l'aeroport d'origen (4 caràcters)
-        self.time = time  # Hora d'aterratge en format hh:mm (string)
+        self.id = id  #Matrícula de l'avió (string)
+        self.airline = airline  #Codi ICAO de la companyia (3 caràcters)
+        self.origin = origin  #Codi ICAO de l'aeroport d'origen (4 caràcters)
+        self.time = time  #Hora d'aterratge en format hh:mm (string)
         self.destination = destination #Quin serà el destí final
         self.departuretime = departuretime #Hora de sortida
 
+
 def is_valid_time(time_str):
-    """Comprova que un string té format hh:mm vàlid."""
+#Comprova si una hora té el format vàlid (hh:mm)
     if not time_str or time_str == '-':
         return False
     try:
@@ -24,12 +27,15 @@ def is_valid_time(time_str):
     except:
         return False
 
+
 def TimeToMinutes(time_str):
     if not time_str or time_str == '-':
         return 0
     h, m = map(int, time_str.split(":"))
     return h * 60 + m
 
+
+#Carrega els vols d'arribada des d'un fitxer
 def LoadArrivals(filename):
     aircrafts = []
     try:
@@ -37,10 +43,9 @@ def LoadArrivals(filename):
     except:
         print(f"Error: no s'ha trobat el fitxer '{filename}'")
         return aircrafts
-
     lines = f.readlines()
     f.close()
-
+#Comencem a la línia 1 perquè la primera sol ser el títol
     for line in lines[1:]:
         line = line.strip()
         if not line:
@@ -52,16 +57,13 @@ def LoadArrivals(filename):
         origin = parts[1]
         time_str = parts[2]
         airline = parts[3]
-
         if not is_valid_time(time_str):
             continue
-
         ac = Aircraft(id_avio, airline, origin, time_str)
         aircrafts.append(ac)
-
     return aircrafts
 
-
+#Carrega els vols de sortida des d'un fitxer# Carrega els vols de sortida des d'un fitxer
 def LoadDepartures(filename):
     aircrafts = []
     try:
@@ -69,27 +71,21 @@ def LoadDepartures(filename):
     except:
         print(f"Error: no s'ha trobat el fitxer '{filename}'")
         return aircrafts
-
     lines = f.readlines()
     f.close()
-
     for line in lines[1:]:
         line = line.strip()
         if not line:
             continue
-
         parts = line.split()
         if len(parts) < 4:
             continue
-
         aircraft_id = parts[0]
         destination = parts[1]
         departuretime = parts[2]
         airline = parts[3]
-
         if not is_valid_time(departuretime):
             continue
-
         ac = Aircraft()
         ac.id = aircraft_id
         ac.destination = destination
@@ -97,31 +93,31 @@ def LoadDepartures(filename):
         ac.airline = airline
 
         aircrafts.append(ac)
+    return aircrafts
 
-    return aircrafts  # ◄ CORREGIT: Només retorna la llista
-
-
+#Uneix les arribades amb les sortides del mateix avió
 def MergeMovements(arrivals, departures):
     if len(arrivals) == 0 and len(departures) == 0:
         return []
-
     result = []
+#Guardarà les sortides que ja hem utilitzat
     used_departures = []
-
     for arr in arrivals:
-        merged = arr  # Empecemos con el avión de llegada
+        #Comencem amb les dades de l'arribada
+        merged = arr
         for dep in departures:
             if dep in used_departures:
                 continue
             if arr.id == dep.id:
                 if TimeToMinutes(arr.time) < TimeToMinutes(dep.departuretime):
+                    #Afegim les dades de la sortida
                     merged.destination = dep.destination
                     merged.departuretime = dep.departuretime
                     used_departures.append(dep)
                     break
         result.append(merged)
 
-    # Añadir vuelos que solo tienen salida (aviones nocturnos)
+    #Afegim avions que només tenen sortida
     for dep in departures:
         if dep not in used_departures:
             result.append(dep)
@@ -129,16 +125,19 @@ def MergeMovements(arrivals, departures):
     return result  # ◄ CORREGIT: Només retorna la llista
 
 
+#Retorna els avions que han passat la nit a l'aeroport
 def NightAircraft(aircrafts):
     if len(aircrafts) == 0:
         return []
     result = []
     for ac in aircrafts:
+        #Si no tenen aeroport d'origen
         if ac.origin == '-' or ac.origin == "":
             result.append(ac)
     return result  # ◄ CORREGIT: Només retorna la llista
 
 
+#Guarda els vols en un fitxer de text
 def SaveFlights(aircrafts, filename):
     if len(aircrafts) == 0:
         return -1
@@ -146,6 +145,7 @@ def SaveFlights(aircrafts, filename):
         with open(filename, 'w') as f:
             f.write("AIRCRAFT ORIGIN ARRIVAL AIRLINE\n")
             for ac in aircrafts:
+                #Si algun camp està buit posem un valor per defecte
                 id_val = ac.id if ac.id != '' else '-'
                 origin_val = ac.origin if ac.origin != '' else '-'
                 time_val = ac.time if ac.time != '' else '0'
@@ -156,12 +156,15 @@ def SaveFlights(aircrafts, filename):
         print(f"Error guardant el fitxer: {e}")
         return -1
 
+
+#Fa un gràfic amb el nombre de vols de cada companyia
 def PlotAirlines(aircrafts):
     if len(aircrafts) == 0:
         print("Error: no hi ha dades")
         return
 
     contador = {}
+    #Comptem quants vols té cada companyia
     for ac in aircrafts:
         if ac.airline in contador:
             contador[ac.airline] += 1
@@ -179,6 +182,8 @@ def PlotAirlines(aircrafts):
     plt.tight_layout()
     plt.show()
 
+
+#Fa un gràfic diferenciant vols Schengen i No Schengen
 def PlotFlightsType(aircrafts):
     if len(aircrafts) == 0:
         print("Error, no hi ha dades")
@@ -201,18 +206,24 @@ def PlotFlightsType(aircrafts):
     plt.legend()
     plt.show()
 
+
+#Crea un fitxer KML per veure les rutes al Google Earth
 def MapFlights(aircrafts):
     if len(aircrafts) == 0:
         print("Error: no hi ha dades")
         return -1
-
+    #Carreguem els aeroports
     airports_list = LoadAirports("Airports.txt")
     airports_dict = {}
+    #Creem un diccionari per buscar aeroports més ràpidament
     for a in airports_list:
         airports_dict[a.code] = a
-
+    #Coordenades aeroport Barcelona
     LEBL_LAT = 41.2974
     LEBL_LON = 2.0833
+
+
+    #Inici del fitxer KML
     kml = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
 <Document>
@@ -221,10 +232,11 @@ def MapFlights(aircrafts):
         if ac.origin in airports_dict:
             origen = airports_dict[ac.origin]
             if IsSchengenAirport(ac.origin):
-                color = "ff00ff00"  # verd
+                color = "ff00ff00"  # verd Schengen
             else:
-                color = "ff0000ff"  # vermell
+                color = "ff0000ff"  # vermell No Schengen
 
+            #Dibuixa una línia entre l'origen i Barcelona
             kml += f"""<Placemark>
     <Style>
         <LineStyle>
@@ -246,6 +258,7 @@ def MapFlights(aircrafts):
     print("KML generat correctament")
 
 
+#Calcula la distància entre dos punts de la Terra
 def HaversineDistance(lat1, lon1, lat2, lon2):
     R = 6371  # Radi de la Terra en km
     a = math.radians(lat1)
@@ -257,20 +270,19 @@ def HaversineDistance(lat1, lon1, lat2, lon2):
     return m
 
 
+#Torna els avions que venen de més de 2000 km
 def LongDistanceArrivals(aircrafts, airports_list):
-    # ◄ MODIFICAT: Ara rep els aeroports com a paràmetre obligatori per a la v4
     llista_llunyans = []
     LEBL_LAT = 41.2974
     LEBL_LON = 2.0833
-
     airports_dict = {}
     for a in airports_list:
         airports_dict[a.code] = a
-
     for ac in aircrafts:
         if ac.origin in airports_dict:
             origen = airports_dict[ac.origin]
             distancia = HaversineDistance(origen.lat, origen.lon, LEBL_LAT, LEBL_LON)
+            #Si supera els 2000 km l'afegim a la llista
             if distancia > 2000:
                 llista_llunyans.append(ac)
 
