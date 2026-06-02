@@ -1,12 +1,14 @@
 from airport import *
 
 class BarcelonaAP:
+    """Representa l'aeroport de Barcelona (LEBL), contenint el seu codi i terminals."""
     def __init__(self, code):
         self.code = code
         self.terminals = []
 
 
 class Terminal:
+    """Representa una terminal de l'aeroport."""
     def __init__(self, name):
         self.name = name
         self.areas = []
@@ -14,6 +16,7 @@ class Terminal:
 
 
 class BoardingArea:
+    """Representa una zona d'embarcament dins d'una terminal."""
     def __init__(self, name, schengen):
         self.name = name
         self.schengen = schengen
@@ -21,6 +24,7 @@ class BoardingArea:
 
 
 class Gate:
+    """Representa una zona d'embarcament dins d'una terminal (ex: Zona A, B, C...)."""
     def __init__(self, name):
         self.name = name
         self.occupied = False
@@ -30,6 +34,10 @@ class Gate:
 
 
 def SetGates(area, init_gate, end_gate, prefix):
+    """
+    Genera sequencialment les portes d'embarcament per a una zona especifica
+    utilitzant un rang numèric i un prefix identificatiu.
+    """
     if end_gate <= init_gate:
         return -1
     area.gates = []
@@ -40,6 +48,10 @@ def SetGates(area, init_gate, end_gate, prefix):
 
 
 def LoadAirlines(terminal, t_name):
+    """
+    Carrega les linies aeries associades a una terminal des de Airlines.txt.
+    Es llegeix el codi ICAO de cada companyia.
+    """
     filename = f"{t_name}_Airlines.txt"
     try:
         f = open(filename, 'r')
@@ -54,6 +66,10 @@ def LoadAirlines(terminal, t_name):
     return 0
 
 def LoadAirportStructure(filename):
+    """
+        Llegeix un fitxer per construir l'estructura completa de l'aeroport:
+        terminals, zones d'embarcament, rang de portes i les seves línies aèries.
+        """
     try:
         f = open(filename, 'r')
     except:
@@ -107,6 +123,7 @@ def LoadAirportStructure(filename):
 
 
 def GateOccupancy(bcn):
+    """Retorna una llista de diccionaris amb l'estat actual d'ocupació de totes les portes."""
     occupancy_list = []
     for terminal in bcn.terminals:
         for area in terminal.areas:
@@ -120,6 +137,7 @@ def GateOccupancy(bcn):
 
 
 def IsAirlineInTerminal(terminal, name):
+    """Comprova si una companyia aèria concreta opera en una terminal determinada."""
     if not name or name.strip() == "":
         return False
     if name in terminal.airlines:
@@ -127,6 +145,7 @@ def IsAirlineInTerminal(terminal, name):
     return False
 
 def SearchTerminal(bcn, name):
+    """Cerca i retorna el nom de la terminal on opera una companyia aèria."""
     if not name or name.strip() == "":
         return ""
     for terminal in bcn.terminals:
@@ -135,6 +154,10 @@ def SearchTerminal(bcn, name):
     return ""
 
 def AssignGate(bcn, aircraft):
+    """
+    Cerca una porta lliure adequada per a un avió segons la seva companyia
+    (terminal corresponent) i el seu origen (zona Schengen o No-Schengen).
+    """
     nomterminal = SearchTerminal(bcn, aircraft.airline)
     if nomterminal == "":
         return -1
@@ -153,6 +176,7 @@ def AssignGate(bcn, aircraft):
     return -1
 
 def FreeGate(bcn, aircraft):
+    """Allibera la porta d'embarcament que està ocupada per un avió específic."""
     for terminal in bcn.terminals:
         for area in terminal.areas:
             for gate in area.gates:
@@ -165,6 +189,10 @@ def FreeGate(bcn, aircraft):
     return -1
 
 def AssignNightGates(bcn, aircrafts):
+    """
+    Assigna portes de l'aeroport als avions que hi passen la nit
+    (aquells que no tenen un origen d'arribada registrat).
+    """
     if len(aircrafts) == 0:
         return -1
     for ac in aircrafts:
@@ -174,6 +202,7 @@ def AssignNightGates(bcn, aircrafts):
     return 0
 
 def _time_to_minutes(time_str):
+    """Funció auxiliar: Converteix una cadena d'hora 'HH: MM' en minuts totals."""
     if not time_str or time_str == '-':
         return -1
     try:
@@ -189,6 +218,11 @@ def _time_to_minutes(time_str):
 
 
 def AssignGatesAtTime(bcn, aircrafts, time):
+    """
+    Gestiona el flux de portes en una franja horària d'una hora:
+    1. Allibera les portes dels avions que s'enlairen.
+    2. Assigna portes noves als avions que aterren en aquesta franja.
+    """
     franja_inici = _time_to_minutes(time)
     if franja_inici == -1:
         return -1
