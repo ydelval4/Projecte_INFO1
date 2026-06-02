@@ -2,28 +2,34 @@ import tkinter as tk
 from tkinter import messagebox, simpledialog, filedialog, ttk
 
 from LEBL import LoadAirportStructure, AssignGate, GateOccupancy
-# Importem TOT el que vam fer al pas anterior
-from airport import *
+#Importem TOT el que vam fer als pasos anteriors
+
+#Importemles funcions dels fitxers airport.py i aircraft.py
 from aircraft import *
+from airport import *
 
 # Variables globals
 llista_aeroports = []
 llista_vols = []
 bcn = None
+#Variable per mostrar missatges de com està tot a la part inferior
 estat_var = None
 
-# NOVES VARIABLES GLOBALS (V4)
+#Noves variables globals (V4)
 llista_arrivals = []
 llista_departures = []
 
+
+#Actualitza el text de la barra d'estat inferior
 def actualitzar_estat(text):
     if estat_var:
         estat_var.set(text)
 
 
+#Deixa seleccionar un fitxer d'aeroports i carregar-lo
 def carregar_fitxer():
     global llista_aeroports
-    # Obre una finestra per buscar l'arxiu .txt
+    #Obre una finestra per buscar l'arxiu .txt
     filename = filedialog.askopenfilename(title="Selecciona l'arxiu d'aeroports", filetypes=[("Text files", "*.txt")])
     if filename:
         llista_aeroports = LoadAirports(filename)
@@ -31,6 +37,7 @@ def carregar_fitxer():
         messagebox.showinfo("Èxit", f"S'han carregat {len(llista_aeroports)} aeroports.")
 
 
+#Actualitza la llista visual dels aeroports
 def actualitzar_llista():
     listbox_ap.delete(0, tk.END)
     for a in llista_aeroports:
@@ -47,8 +54,9 @@ def aplicar_schengen():
     messagebox.showinfo("Èxit", "S'ha comprovat l'espai Schengen per a tots els aeroports.")
 
 
+#Obre una finestra per afegir un aeroport nou
 def afegir_aeroport():
-
+    #Creem una finestra nova
     finestra_add = tk.Toplevel(finestra)
     finestra_add.title("Afegir Aeroport")
     finestra_add.geometry("350x250")
@@ -67,6 +75,7 @@ def afegir_aeroport():
     entry_lon = tk.Entry(finestra_add)
     entry_lon.pack(fill="x", padx=20)
 
+    #Funció que es crida quan premem "Guardar"
     def guardar():
         try:
             code = entry_code.get().upper()
@@ -75,14 +84,13 @@ def afegir_aeroport():
             nou = Airport(code, lat, lon)
             SetSchengen(nou)
             res = AddAirport(llista_aeroports, nou)
-
             if res == 0:
                 actualitzar_llista()
                 actualitzar_llista_aeroports()
                 actualitzar_estat(f"Aeroport {code} afegit correctament")
                 messagebox.showinfo("Èxit",f"Aeroport {code} afegit correctament")
+                #Tanquem la finestra
                 finestra_add.destroy()
-
             else:
                 messagebox.showerror(
                     "Error",
@@ -285,8 +293,6 @@ def mostrar_grafic_ocupacio_diaria():
 
 
 #Finestra principal per la interfaz
-import tkinter as tk
-
 COLOR_FONDO = "#F5F7FA"
 COLOR_PANEL = "#FFFFFF"
 COLOR_PRINCIPAL = "#1F4E79"
