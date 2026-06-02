@@ -301,6 +301,14 @@ def mostrar_grafic_ocupacio_diaria():
         return
     PlotDayOccupancy(bcn, llista_vols)
 
+
+def ui_mostrar_grafic_arribades_hora():
+        global llista_arrivals
+        if not llista_arrivals:
+            messagebox.showwarning("Atenció", "Primer has de carregar els vols de l'arxiu Arrivals.")
+            return
+        PlotArrivalsByHour(llista_arrivals)
+
 #Finestra principal per la interfaz
 COLOR_FONDO = "#F5F7FA"
 COLOR_PANEL = "#FFFFFF"
@@ -363,6 +371,7 @@ crear_boto(frame_botons,"Carregar Departures",carregar_fitxer_sortides).pack(pad
 crear_boto(frame_botons,"Fusionar Moviments",fusionar_moviments_ui).pack(pady=3)     # ◄ NOU
 crear_boto(frame_botons,"Gràfic Aerolínies",mostrar_grafic_vols).pack(pady=3)
 crear_boto(frame_botons,"Gràfic Tipus Vol",mostrar_grafic_tipus_vols).pack(pady=3)
+crear_boto(frame_botons,"Arribades per Hora",ui_mostrar_grafic_arribades_hora).pack(pady=3)
 crear_boto(frame_botons,"Mapa Trajectòries",generar_mapa_trajectories).pack(pady=3)
 crear_boto(frame_botons,"Vols > 2000 km",guardar_vols_llunyans).pack(pady=3)
 

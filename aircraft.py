@@ -287,3 +287,37 @@ def LongDistanceArrivals(aircrafts, airports_list):
                 llista_llunyans.append(ac)
 
     return llista_llunyans
+
+
+def PlotArrivalsByHour(aircrafts):
+    # Inicialitzem un comptador amb 24 posicions (una per a cada hora del dia)
+    arribades_per_hora = [0] * 24
+
+    for ac in aircrafts:
+        if ac.time and ac.time != '-':
+            try:
+                # Extraiem l'hora abans dels dos punts (ex: "14:25" -> 14)
+                hora = int(ac.time.split(':')[0])
+                if 0 <= hora <= 23:
+                    arribades_per_hora[hora] += 1
+            except:
+                continue  # Si hi ha un error de format, passem al següent
+
+    # Creem la visualització amb Matplotlib
+    plt.figure(figsize=(10, 5))
+    hores = list(range(24))
+
+    # Dibuixem les barres
+    plt.bar(hores, arribades_per_hora, color='#1d6fa4', edgecolor='black', alpha=0.8)
+
+    # Configuració de la gràfica
+    plt.title("Trànsit de Llegades per Franja Horària", fontsize=14, fontweight='bold', pad=15)
+    plt.xlabel("Hora del dia", fontsize=11)
+    plt.ylabel("Número de arribades", fontsize=11)
+
+    # Forcem que mostri totes les hores a l'eix X
+    plt.xticks(hores, [f"{h:02d}:00" for h in hores], rotation=45, fontsize=9)
+    plt.grid(axis='y', linestyle='--', alpha=0.5)
+
+    plt.tight_layout()
+    plt.show()
