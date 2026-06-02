@@ -161,7 +161,8 @@ def MapAirports(airports, filename="mapa_aeropuertos.kml"):
                 f.write('  </Placemark>\n')
                 #Escrivim cada aeroport dins del mapa
             f.write(kml_footer)
-        return 0    except Exception as e:
+        return 0
+    except Exception as e:
         print(f"Error generando el mapa KML: {e}")
         return -1
 #Si hi ha algun error al crear el fitxer, el mostrem per pantalla
